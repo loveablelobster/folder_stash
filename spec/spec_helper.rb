@@ -83,4 +83,8 @@ RSpec.configure do |config|
   # test failures related to randomization by passing the same `--seed` value
   # as the one that triggered the failure.
   Kernel.srand config.seed
+
+  config.before :suite do
+    FileUtils.mkdir 'spec/test_dir' unless File.exist? 'spec/test_dir'
+  end
 end

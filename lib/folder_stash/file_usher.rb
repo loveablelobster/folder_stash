@@ -7,6 +7,8 @@ module FolderStash
     attr_reader :directory
 
     def initialize(dir, nesting: 2, items: 1000)
+      raise NoDirectoryError, dir: dir unless File.directory? dir
+
       @directory = dir
       @nesting = nesting
       @items_per_dir = items
