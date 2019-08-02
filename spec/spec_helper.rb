@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'support/matchers'
 require_relative '../lib/folder_stash'
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
