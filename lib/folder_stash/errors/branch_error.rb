@@ -2,12 +2,12 @@
 
 module FolderStash
   module Errors
-    class NoDirectoryError < StandardError
+    class BranchError < StandardError
       attr_reader :dir
 
       def initialize(msg = nil, dir: nil)
         @dir = dir
-        msg ||= "The directory #{dir} does not exist or is not a directory"
+        msg ||= "Can not branch in #{dir} because it is a tree terminal."
         super msg
       end
     end

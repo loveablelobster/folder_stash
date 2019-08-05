@@ -2,6 +2,7 @@
 
 require_relative 'support/matchers'
 require_relative '../lib/folder_stash'
+require_relative 'support/shared_variables'
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|

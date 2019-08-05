@@ -2,8 +2,9 @@
 
 module FolderStash
   RSpec.describe FileUsher do
+    include_context 'with variables'
+
     let(:usher) { described_class.new dir }
-    let(:dir) { 'spec/test_dir' }
     let(:symlink) { File.join dir, FileUsher::CURRENT_STORE_PATH }
 
     let :ls do

@@ -1,12 +1,6 @@
 # frozen_string_literal: true
 
 module FolderStash
-  # Notes:
-  # - #current_dir is _always_ at deepest nesting_levels level
-  # - if #current_dir has reached #limit?
-  #   - check if parent of #current_dir has reached #limt?
-  #     - if not, make new folder in parent
-  #     - if yes, has parent of parent reached #limit?
   class FileUsher
     CURRENT_STORE_PATH = '.current_store_path'
 
@@ -20,25 +14,25 @@ module FolderStash
     attr_reader :items_per_directory
 
     def initialize(dir, nesting_levels: 2, items_per_directory: 1000)
-      raise NoDirectoryError, dir: dir unless File.directory? dir
+      raise Errors::NoDirectoryError, dir: dir unless File.directory? dir
 
       @directory = dir
       @current_directory = File.join @directory, CURRENT_STORE_PATH
+
+      @current_folder = Folder.new @current_directory,
+                                   limit: items_per_directory
+
       @nesting_levels = nesting_levels
       @items_per_directory = items_per_directory
       link_current_dir
     end
 
     def available?(dir = nil)
-      entries(dir).count < @items_per_directory
+      Folder.new(dir, limit: items_per_directory).available?
     end
 
     def current_directory
       File.expand_path @current_directory
-    end
-
-    def limit?(dir = nil)
-      entries(dir).count >= @items_per_directory
     end
 
     # Creates symlink to the directory where files will be stored until full.
@@ -52,33 +46,18 @@ module FolderStash
     private
 
     def storage_dir
-      return if available?
+      tree = FolderTree.new(@current_directory, directory, items_per_directory)
+      available_parent = tree.available_folder
+      raise 'out of storage' unless available_parent
 
-      # Path (String) to an available directory
-      available_parent = nesting_path.reverse.find { |dir| available?(dir) }
+      return if available_parent.path == current_directory
 
-      if available_parent
-        idx = nesting_path.index(available_parent)
-        levels = nesting_path[idx..-1].count - 1
-      else
-        levels = nesting_path.count - 1
-      end
-
-      link_target make_nest(levels, available_parent)
+      tree.new_branch_in available_parent
+      link_target tree.terminal.path
     end
 
     def current_folder_link
       File.join directory, 'current folder'
-    end
-
-    # Returns all files and folders in +dir+ or @current_directory except hidden
-    # files.
-    #
-    # To get entries of parent: <tt>entries('..')</tt>
-    # To get entries of grandparent: <tt>entries('../..')</tt>
-    def entries(dir = nil)
-      dir ||= @current_directory
-      Dir.children(dir).reject { |entry| entry.start_with? '.' }
     end
 
     # Changes the @current_directory symlink to +dir+
@@ -86,19 +65,14 @@ module FolderStash
       FileUtils.ln_s File.expand_path(dir), current_directory
     end
 
-    def make_nest(levels, root = nil)
-      root ||= @directory
-      next_c_dir_path = levels.times.inject(root) do |dir|
+    # FIXME: use SecureRandom.hex(8)
+    # FIXME: try to make an empty tree!
+    def make_nest(levels)
+      next_c_dir_path = levels.times.inject(@directory) do |dir|
         dir = File.join(dir, SecureRandom.uuid)
       end
       FileUtils.mkdir_p next_c_dir_path
       next_c_dir_path
-    end
-
-    def nesting_path
-      path = File.expand_path(@current_directory).split('/')
-      root_path = File.expand_path(directory).split('/')
-      path - root_path
     end
   end
 end
