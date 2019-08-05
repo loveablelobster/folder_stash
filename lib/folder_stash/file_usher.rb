@@ -46,7 +46,9 @@ module FolderStash
     private
 
     def storage_dir
-      tree = FolderTree.new(@current_directory, directory, items_per_directory)
+      tree = FolderTree.new(directory,
+                            @current_directory,
+                            limit: items_per_directory)
       available_parent = tree.available_folder
       raise 'out of storage' unless available_parent
 

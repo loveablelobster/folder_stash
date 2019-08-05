@@ -5,7 +5,7 @@ module FolderStash
   class FolderTree
     # An array with instances of Folder, one for each directory in a nested
     # directory path from the #root to the #terminal.
-    attr_reader :folders
+    attr_accessor :folders
 
     # The maximum number of itmes that may be stored in any folder in #folders.
     attr_reader :limit
@@ -22,14 +22,26 @@ module FolderStash
     # * <tt>root_dir</tt> (String) - path for the #root directory in a tree.
     # * +limit+ (Integer) - the number of items allowed in any folder in the
     #   tree's directory path.
-    def initialize(folder, root_dir, limit)
-      path_items = (folder.split('/') - root_dir.split('/'))
-      directories = path_items.inject([root_dir]) do |paths, dir|
-        paths << File.join(paths.last, dir)
-      end
-      @folders = directories.map { |path| Folder.new(path, limit) }
+    def initialize(root_dir, folders, levels, limit = nil)
+      @folders = folders
+      @path_length = levels
       @limit = limit
-      @path_length = path_items.count
+    end
+
+    def self.empty(root, levels:, limit:)
+      folders = [Folder.new(root, limit)]
+      tree = self.new(root, folders, levels, limit)
+      tree.new_branch_in tree.root, levels
+    end
+
+    def self.for_path(path, root:, limit:)
+      path_items = (path.split('/') - root.split('/'))
+      root_folder = Folder.new root, limit
+      folders = path_items.inject([root_folder]) do |dirs, dir|
+        path = File.join dirs.last.path, dir
+        dirs << Folder.new(path, limit)
+      end
+      self.new root, folders, path_items.count, limit
     end
 
     # Returns the next available folder, searching upstream from the terminal
@@ -48,10 +60,11 @@ module FolderStash
     #
     # Returns an array with the full path for the terminal folder in the branch
     # created.
-    def new_branch_in(folder)
+    def new_branch_in(folder, levels = nil)
       raise Errors::BranchError, dir: folder.path if folder == terminal
 
-      new_branch = new_paths_in folder
+      levels ||= levels_below folder
+      new_branch = new_paths_in folder, levels
       @folders = folders[0..folders.index(folder)].concat new_branch
       folders.last.create!
     end
@@ -81,10 +94,18 @@ module FolderStash
       Folder.new File.join(path, name), limit
     end
 
+    # FIXME: This should be the default initializer
+    def init_empty(levels = nil)
+      return unless levels
+
+      @path_length = levels
+      new_branch_in(root_dir, levels)
+    end
+
     # Returns an array of new Folder instances.
-    def new_paths_in(folder)
+    def new_paths_in(folder, count)
       first_node = ensure_unique_node(folder.path, SecureRandom.hex(8))
-      remainder = levels_below(folder) - 1
+      remainder = count - 1
       remainder.times.inject([first_node]) do |nodes|
         path = File.join nodes.last.path, SecureRandom.hex(8)
         nodes << Folder.new(path, limit)

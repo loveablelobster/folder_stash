@@ -12,7 +12,7 @@ module FolderStash
 
     let(:folder) { folders.last }
 
-    let(:folder_tree) { described_class.new folder, dir, 4 }
+    let(:folder_tree) { described_class.for_path(folder, root: dir, limit: 4) }
 
     # Set-up test folder tree.
     before do
