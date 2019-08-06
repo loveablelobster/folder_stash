@@ -4,20 +4,20 @@ module FolderStash
   RSpec.describe FileUsher do
     include_context 'with variables'
 
-    let(:usher) { described_class.new dir, items_per_directory: 4 }
+    let(:usher) { described_class.new dir, folder_limit: 4 }
     let(:symlink) { File.join dir, FileUsher::CURRENT_STORE_PATH }
 
     let :ls do
       -> { Dir.new(dir).children.reject { |fn| fn.start_with? '.' } }
     end
 
+    after do
+      files = Dir.glob("#{dir}/*").push(usher.current_directory)
+      FileUtils.rm_r files
+    end
+
     context 'when initialized' do
       subject(:initialze_usher) { usher }
-
-      after do
-        files = Dir.glob("#{dir}/*").push(usher.current_directory)
-        FileUtils.rm_r files
-      end
 
       context 'when the current_store_path symlink exists' do
         before do
@@ -61,10 +61,20 @@ module FolderStash
       end
     end
 
-    describe '#current_directory'
+    describe '#current_directory' do
+      subject { usher.current_directory }
 
-    describe '#current_folder'
+      it { is_expected.to end_with FileUsher::CURRENT_STORE_PATH }
+    end
+
+    describe '#current_folder' do
+      subject { usher.current_folder }
+
+      it 'is returns a Folder'
+    end
 
     describe '#current_path'
+
+    describe '#linked_path'
   end
 end
