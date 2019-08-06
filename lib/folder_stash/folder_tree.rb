@@ -32,6 +32,7 @@ module FolderStash
       folders = [Folder.new(root, limit)]
       tree = self.new(root, folders, levels, limit)
       tree.new_branch_in tree.root, levels
+      tree
     end
 
     def self.for_path(path, root:, limit:)
@@ -42,6 +43,11 @@ module FolderStash
         dirs << Folder.new(path, limit)
       end
       self.new root, folders, path_items.count, limit
+    end
+
+    # Returns the number of folder in the nested path currently available.
+    def actual_path_length
+      folders.count
     end
 
     # Returns the next available folder, searching upstream from the terminal
@@ -75,7 +81,11 @@ module FolderStash
     end
 
     # Returns the terminal (most deeply nested) folder.
+    #
+    # Returns +nil+ if the tree has not been fully initialized with a branch.
     def terminal
+      return if actual_path_length < path_length
+
       folders.last
     end
 

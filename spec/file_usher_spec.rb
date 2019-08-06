@@ -37,7 +37,7 @@ module FolderStash
 
         it 'creates a subdirectory in its directory' do
           expect { initialze_usher }.to change { ls.call }
-            .from(be_empty).to include an_uuid
+            .from(be_empty).to include a_random_hex_8_string
         end
 
         it "points the #{FileUsher::CURRENT_STORE_PATH} symlink to a"\
@@ -51,7 +51,8 @@ module FolderStash
           end
 
           expect { initialze_usher }.to change { nested_dirs.call }
-            .from(be_nil).to contain_exactly an_uuid, an_uuid
+            .from(be_nil).to contain_exactly a_random_hex_8_string,
+                                             a_random_hex_8_string
         end
       end
     end

@@ -9,4 +9,10 @@ RSpec::Matchers.define :an_uuid do
   end
 end
 
+RSpec::Matchers.define :a_random_hex_8_string do
+  match do |actual|
+    /^[0-9a-z]{16}$/.match? actual
+  end
+end
+
 RSpec::Matchers.alias_matcher :be_uuid, :an_uuid
