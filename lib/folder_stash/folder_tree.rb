@@ -22,27 +22,27 @@ module FolderStash
     # * <tt>root_dir</tt> (String) - path for the #root directory in a tree.
     # * +limit+ (Integer) - the number of items allowed in any folder in the
     #   tree's directory path.
-    def initialize(root_dir, folders, levels, limit = nil)
+    def initialize(folders, levels, limit = nil)
       @folders = folders
       @path_length = levels
       @limit = limit
     end
 
     def self.empty(root, levels:, limit:)
-      folders = [Folder.new(root, limit)]
-      tree = self.new(root, folders, levels, limit)
+      folders = [Folder.new(root)]
+      tree = new(folders, levels, limit)
       tree.new_branch_in tree.root, levels
       tree
     end
 
     def self.for_path(path, root:, limit:)
-      path_items = (path.split('/') - root.split('/'))
-      root_folder = Folder.new root, limit
-      folders = path_items.inject([root_folder]) do |dirs, dir|
-        path = File.join dirs.last.path, dir
-        dirs << Folder.new(path, limit)
-      end
-      self.new root, folders, path_items.count, limit
+      path_items = path_segment path, root
+      folders = Folder.folders_for_path_segment root, path_items
+      new folders, path_items.count, limit
+    end
+
+    def self.path_segment(terminal, root)
+      File.expand_path(terminal).split('/') - File.expand_path(root).split('/')
     end
 
     # Returns the number of folder in the nested path currently available.
@@ -53,7 +53,7 @@ module FolderStash
     # Returns the next available folder, searching upstream from the terminal
     # folder to the #root.
     def available_folder
-      folders.reverse.find(&:available?)
+      folders.reverse.find { |folder| folder.count < limit }
     end
 
     # Returns the number (integer) of levels of folders nested in +folder+.
@@ -101,7 +101,7 @@ module FolderStash
     # unique.
     def ensure_unique_node(path, name)
       name = SecureRandom.hex(8) while File.exist? File.join(path, name)
-      Folder.new File.join(path, name), limit
+      Folder.new File.join(path, name)
     end
 
     # FIXME: This should be the default initializer
@@ -118,7 +118,7 @@ module FolderStash
       remainder = count - 1
       remainder.times.inject([first_node]) do |nodes|
         path = File.join nodes.last.path, SecureRandom.hex(8)
-        nodes << Folder.new(path, limit)
+        nodes << Folder.new(path)
       end
     end
   end

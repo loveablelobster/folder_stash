@@ -21,38 +21,41 @@ module FolderStash
     # An instance of FolderTree.
     attr_reader :tree
 
-    def initialize(dir, nesting_levels: 2, items_per_directory: 1000)
+    # Returns a new instance.
+    #
+    # ===== Arguments
+    #
+    # * +dir+ (_String_) - path for the #directory.
+    #
+    # ===== Options
+    #
+    # * <tt>nesting_levels</tt> - the number of subdirectories below #directory
+    #   in the path of files that are stored (_default_: +2+).
+    # * <tt>items_per_directory</tt> - the maximum number of items allowed per
+    #   directory (_default_: +10000+).
+    #
+    def initialize(dir, nesting_levels: 2, items_per_directory: 10000)
       raise Errors::NoDirectoryError, dir: dir unless File.directory? dir
 
       @directory = dir
-      @nesting_levels = nesting_levels
       @items_per_directory = items_per_directory
       @current_directory = File.join @directory, CURRENT_STORE_PATH
 
-      @tree = FolderTree.empty directory,
-                               levels: nesting_levels,
-                               limit: items_per_directory
-
-      link_target
+      if File.exist? current_directory
+        @tree = FolderTree.for_path File.readlink(current_directory),
+                                    root: directory, limit: items_per_directory
+      else
+        @tree = FolderTree.empty directory,
+                                 levels: nesting_levels,
+                                 limit: items_per_directory
+        link_target
+      end
+      @nesting_levels = tree.path_length
     end
 
     # Returns the full path (_String_) to the current directory symlink.
     def current_directory
       File.expand_path @current_directory
-    end
-
-    # Returns the full path (_String_) to the current directory symlink.
-    #
-    # Creates new subdirectories and moves the current_directory symlink if the
-    # #current_folder has reached the maximum #items_per_directory.
-    def current_directory!
-      available_folder = tree.available_folder
-      unless available_folder == current_folder
-        tree.new_branch_in available_folder
-        link_target
-      end
-
-      current_directory
     end
 
     def current_folder
@@ -64,17 +67,36 @@ module FolderStash
     end
 
     def store(file)
+      update_link unless current_folder.available?
       path = File.join current_directory!, File.basename(file)
-
       File.open(path, 'wb') { |f| f.write(File.new(file).read) }
       path
     end
 
     private
 
+    def init_existing
+      return unless File.exist? current_directory
+
+      FolderTree.for_path File.readlink(current_directory),
+                          root: directory, limit: items_per_directory
+    end
+
+    def init_new(levels)
+      tree = FolderTree.empty directory, levels: levels,
+                                 limit: items_per_directory
+      link_target
+      tree
+    end
+
     # Changes the @current_directory symlink to +dir+
     def link_target
       FileUtils.ln_s File.expand_path(current_path), current_directory
+    end
+
+    def update_link
+      tree.new_branch_in tree.available_folder
+      link_target
     end
   end
 end

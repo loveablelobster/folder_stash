@@ -4,7 +4,7 @@ module FolderStash
   RSpec.describe FileUsher do
     include_context 'with variables'
 
-    let(:usher) { described_class.new dir }
+    let(:usher) { described_class.new dir, items_per_directory: 4 }
     let(:symlink) { File.join dir, FileUsher::CURRENT_STORE_PATH }
 
     let :ls do
@@ -20,7 +20,11 @@ module FolderStash
       end
 
       context 'when the current_store_path symlink exists' do
-        before { usher }
+        before do
+          make_test_dir
+          td = 'spec/test_dir/folder_1/folder_2/folder_3/folder_4/folder_5'
+          FileUtils.ln_s File.expand_path(td), File.join(dir, FileUsher::CURRENT_STORE_PATH)
+        end
 
         it 'does not change the existing subdirectories' do
           expect { initialze_usher }.to not_change { ls.call }
@@ -56,5 +60,11 @@ module FolderStash
         end
       end
     end
+
+    describe '#current_directory'
+
+    describe '#current_folder'
+
+    describe '#current_path'
   end
 end

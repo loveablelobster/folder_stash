@@ -4,28 +4,10 @@ module FolderStash
   RSpec.describe FolderTree do
     include_context 'with variables'
 
-    let(:folders) do
-      5.times.inject([dir]) do |dirs, i|
-        dirs << File.join(dirs.last, "folder_#{i + 1}")
-      end
-    end
-
-    let(:folder) { folders.last }
-
     let(:folder_tree) { described_class.for_path(folder, root: dir, limit: 4) }
 
     # Set-up test folder tree.
-    before do
-      FileUtils.mkdir_p folder
-      idx = 5
-      folders[0..-2].each do |f|
-        2.times do
-          idx += 1
-          FileUtils.mkdir File.join(f, "folder_#{idx}")
-        end
-      end
-      3.times { |i| FileUtils.touch File.join(folder, "example_#{i}.txt") }
-    end
+    before { make_test_dir }
 
     # Delete test folder tree.
     after { FileUtils.rm_r Dir.glob("#{dir}/*") }
@@ -90,11 +72,6 @@ module FolderStash
                       an_object_having_attributes(path: end_with(folders[3])),
                       an_object_having_attributes(path: end_with(folders[4])),
                       an_object_having_attributes(path: end_with(folders[5]))
-      end
-
-      it do
-        expect(tree_folders)
-          .to all have_attributes(limit: 4)
       end
     end
 

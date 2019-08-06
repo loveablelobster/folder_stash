@@ -6,26 +6,21 @@ module FolderStash
     # The directory for the folder.
     attr_reader :path
 
-    # The number of items (excluding hidden files) that may be stored in the
-    # folder's directory.
-    attr_reader :limit
-
     # Returns a new instance.
     #
     # ===== Arguments
     #
     # * +path+ (String) - path to the directory for the folder.
-    # * +limit+ (Integer) - the number of items allowed in any folder in the
-    #   tree's directory path.
-    def initialize(path, limit = nil)
+    def initialize(path)
       @path = File.expand_path path
-      @limit = limit
     end
 
-    # Returns +true+ if the #limit the nomber of entries in the folder is below
-    # the limit and additional items may be stored.
-    def available?
-      count < limit
+    def self.folders_for_path_segment(root, segment)
+      root_folder = Folder.new root
+      segment.inject([root_folder]) do |dirs, dir|
+        path = File.join dirs.last.path, dir
+        dirs << Folder.new(path)
+      end
     end
 
     # Returns the number of visible files in the folder.
@@ -46,12 +41,6 @@ module FolderStash
     # Returns +true+ if the directory #path exists.
     def exist?
       File.exist? path
-    end
-
-    # Returns +true+ if the number of entries in the folder has reached or
-    # exceeds the limit.
-    def limit?
-      count >= limit
     end
 
     # Returns a list of entries (files or folders) in the folder.
