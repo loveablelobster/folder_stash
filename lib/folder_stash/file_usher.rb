@@ -45,14 +45,16 @@ module FolderStash
       link_target
     end
 
+    # Copies +file+ to linked path.
+    def copy(file)
+      path = store_path(file)
+      File.open(path, 'wb') { |f| f.write(File.new(file).read) }
+      file_path file
+    end
+
     # Returns the full path (_String_) to the current directory symlink.
     def current_directory
       File.expand_path @current_directory
-    end
-
-    # Returns a Folder that is currently the FolderTree#terminal.
-    def current_folder
-      tree.terminal
     end
 
     # Returns the full directory path for #current_folder
@@ -65,19 +67,47 @@ module FolderStash
       File.readlink current_directory
     end
 
-    # Copies +file+ to the #linked_path.
-    def store(file)
-      update_link unless current_folder.available?
-      path = File.join current_directory, File.basename(file)
-      File.open(path, 'wb') { |f| f.write(File.new(file).read) }
-      path
+    # Moves +file+ to the #linked_path.
+    def move(file, pathtype: :tree)
+      path = store_path(file)
+      FileUtils.mv File.expand_path(file), store_path(file)
+      file_path path, pathtype
     end
 
     private
 
+    # Returns the next available folder in #tree. Will raise OutOfStorageError
+    # if none is available.
+    def available_folder
+      folder = tree.available_folder
+      raise Errors::TreeLimitExceededError, tree: tree unless folder
+
+      folder
+    end
+
     # Returns +true+ if the current directory symlink exists in #directory.
     def current_directory?
       File.exist? current_directory
+    end
+
+    # Returns a Folder that is currently the FolderTree#terminal.
+    def current_folder
+      tree.terminal
+    end
+
+    # Returns the path for +path+ as +:absolute+, +:relative+, or only the
+    # nested subdirectories in the +:tree+.
+    def file_path(path, pathtype)
+      treepath = tree.branch_path.append(File.basename(path))
+      case pathtype
+      when :absolute
+        File.realpath path
+      when :relative
+        treepath[0] = directory
+        treepath.join('/')
+      when :tree
+        treepath.join('/')
+      end
     end
 
     # Creates the folder #tree in an existing directory with #current_directory
@@ -101,10 +131,17 @@ module FolderStash
       FileUtils.ln_s File.expand_path(current_path), current_directory
     end
 
+    # Returns the next available path (_String_) for a file to be stored under.
+    def store_path(file)
+      update_link if current_folder.count >= folder_limit
+      File.join current_directory, File.basename(file)
+    end
+
     # Creates new subdirectories points the #current_directory symlink to the
     # new #current_folder.
     def update_link
-      tree.new_branch_in tree.available_folder
+      tree.new_branch_in available_folder
+      FileUtils.rm current_directory
       link_target
     end
   end

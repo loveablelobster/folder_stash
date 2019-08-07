@@ -3,7 +3,10 @@
 module FolderStash
   # A Folder represents a directory in the filesystem.
   class Folder
-    # The directory for the folder.
+    # Basename for the folder.
+    attr_reader :basename
+
+    # Absolute path for the folder.
     attr_reader :path
 
     # Returns a new instance.
@@ -13,6 +16,7 @@ module FolderStash
     # * +path+ (String) - path to the directory for the folder.
     def initialize(path)
       @path = File.expand_path path
+      @basename = File.basename path
     end
 
     def self.folders_for_path_segment(root, segment)

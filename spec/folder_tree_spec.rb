@@ -61,6 +61,10 @@ module FolderStash
       end
     end
 
+    describe '#branch_path' do
+      it 'returns the full path of all subdirectoires in the current branch'
+    end
+
     describe '#folders' do
       subject(:tree_folders) { folder_tree.folders }
 
@@ -119,6 +123,8 @@ module FolderStash
         it 'creates the terminal directory with all parents' do
           expect(File.directory?(branch.first)).to be_truthy
         end
+
+        it 'changes the branch_path'
       end
     end
 

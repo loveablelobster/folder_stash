@@ -56,6 +56,10 @@ module FolderStash
       folders.reverse.find { |folder| folder.count < limit }
     end
 
+    def branch_path
+      folders.map(&:basename)
+    end
+
     # Returns the number (integer) of levels of folders nested in +folder+.
     def levels_below(folder)
       path_length - folders.index(folder)
@@ -68,6 +72,8 @@ module FolderStash
     # created.
     def new_branch_in(folder, levels = nil)
       raise Errors::BranchError, dir: folder.path if folder == terminal
+
+      raise 'out of storage' if folder.count >= limit
 
       levels ||= levels_below folder
       new_branch = new_paths_in folder, levels
