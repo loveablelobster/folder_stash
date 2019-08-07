@@ -34,6 +34,9 @@ module FolderStash
     # * <tt>folder_limit</tt> - the maximum number of items allowed per
     #   directory (_default_: +10000+).
     #
+    # TODO: option to store symlink in other dir (safety thing)
+    # TODO: should be able to do nothing if nothing needs to be done
+    #   nesting_levels: nil && folder_limit: nil
     def initialize(dir, nesting_levels: 2, folder_limit: 10_000)
       raise Errors::NoDirectoryError, dir: dir unless File.directory? dir
 

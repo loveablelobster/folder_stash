@@ -8,11 +8,13 @@ module FolderStash
     attr_accessor :folders
 
     # The maximum number of itmes that may be stored in any folder in #folders.
-    attr_reader :limit
+    attr_reader :folder_limit
 
     # The number of items (directories) in a nested directory path, from the
     # #root to the #terminal.
     attr_reader :path_length
+
+    attr_reader :tree_limit
 
     # Returns a new instance.
     #
@@ -25,7 +27,8 @@ module FolderStash
     def initialize(folders, levels, limit = nil)
       @folders = folders
       @path_length = levels
-      @limit = limit
+      @folder_limit = limit
+      @tree_limit = folder_limit ** (path_length + 1)
     end
 
     def self.empty(root, levels:, limit:)
@@ -53,7 +56,7 @@ module FolderStash
     # Returns the next available folder, searching upstream from the terminal
     # folder to the #root.
     def available_folder
-      folders.reverse.find { |folder| folder.count < limit }
+      folders.reverse.find { |folder| folder.count < folder_limit }
     end
 
     def branch_path
@@ -73,7 +76,7 @@ module FolderStash
     def new_branch_in(folder, levels = nil)
       raise Errors::BranchError, dir: folder.path if folder == terminal
 
-      raise 'out of storage' if folder.count >= limit
+      raise 'out of storage' if folder.count >= folder_limit
 
       levels ||= levels_below folder
       new_branch = new_paths_in folder, levels

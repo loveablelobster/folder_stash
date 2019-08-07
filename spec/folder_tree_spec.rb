@@ -121,7 +121,7 @@ module FolderStash
         end
 
         it 'creates the terminal directory with all parents' do
-          expect(File.directory?(branch.first)).to be_truthy
+          expect(branch.first).to be_directory
         end
 
         it 'changes the branch_path'
