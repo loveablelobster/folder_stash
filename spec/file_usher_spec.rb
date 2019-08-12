@@ -26,8 +26,7 @@ module FolderStash
         before do
           make_test_dir
           td = 'spec/test_dir/folder_1/folder_2/folder_3/folder_4/folder_5'
-          FileUtils.ln_s File.expand_path(td),
-                         File.join('spec', FileUsher::CURRENT_STORE_PATH)
+          FileUtils.ln_s File.expand_path(td), symlink
         end
 
         it 'does not change the existing subdirectories' do

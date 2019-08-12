@@ -20,15 +20,15 @@ module FolderStash
     #
     # ===== Arguments
     #
-    # * +folder+ (String) - path for the terminal folder in a tree.
-    # * <tt>root_dir</tt> (String) - path for the #root directory in a tree.
-    # * +limit+ (Integer) - the number of items allowed in any folder in the
+    # * +folders+ (String) - Array of Folder instances.
+    # * +levels+ (Integer) - Number of nested subdirectories in a path.
+    # * +limit+ (Integer) - Number of items allowed in any folder in the
     #   tree's directory path.
-    def initialize(folders, levels, limit = nil)
+    def initialize(folders, levels, limit)
       @folders = folders
       @path_length = levels
       @folder_limit = limit
-      @tree_limit = folder_limit ** (path_length + 1)
+      @tree_limit = folder_limit**(path_length + 1)
     end
 
     def self.empty(root, levels:, limit:)

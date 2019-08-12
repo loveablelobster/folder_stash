@@ -30,7 +30,6 @@ module FolderStash
     # * <tt>link_location</tt> - the directory where the #current_directory
     #   symlink is stored. When not specified, the symlink will be in #directory
     #
-    # TODO: option to store symlink in other dir (safety thing)
     # TODO: should be able to do nothing if nothing needs to be done
     #   nesting_levels: nil && folder_limit: nil
     def initialize(dir, **opts)
@@ -41,7 +40,7 @@ module FolderStash
       @current_directory = File.join @options.fetch(:link_location, directory),
                                      CURRENT_STORE_PATH
 
-      @tree = init_existing || init_new(@options.fetch(:nesting_levels))
+      @tree = init_existing || init_new(nesting_levels)
       link_target
     end
 
@@ -81,7 +80,7 @@ module FolderStash
 
     # The number of nested subdirectories.
     def nesting_levels
-      tree.path_length
+      tree&.path_length || @options.fetch(:nesting_levels)
     end
 
     private

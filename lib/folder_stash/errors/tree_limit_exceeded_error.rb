@@ -13,7 +13,7 @@ module FolderStash
         @subdirs = tree.path_length
         @subdir_limit = tree.folder_limit
         @tree_limit = tree.tree_limit
-        msg ||= "The storage tree has reached the limit of allowed items:"\
+        msg ||= 'The storage tree has reached the limit of allowed items:'\
                 " #{subdir_limit} items in #{subdirs} subdirectories"\
                 " (#{tree_limit} allowd items in total)."
         super msg
