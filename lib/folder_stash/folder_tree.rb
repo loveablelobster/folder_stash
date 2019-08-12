@@ -28,7 +28,7 @@ module FolderStash
       @folders = folders
       @path_length = levels
       @folder_limit = limit
-      @tree_limit = folder_limit**(path_length + 1)
+      @tree_limit = folder_limit ? folder_limit**(path_length + 1) : nil
     end
 
     def self.empty(root, levels:, limit:)
@@ -55,7 +55,11 @@ module FolderStash
 
     # Returns the next available folder, searching upstream from the terminal
     # folder to the #root.
+    #
+    # Returns #root if root is the only folder.
     def available_folder
+      return root if flat?
+
       folders.reverse.find { |folder| folder.count < folder_limit }
     end
 
@@ -63,8 +67,14 @@ module FolderStash
       folders.map(&:basename)
     end
 
+    def flat?
+      actual_path_length == 1 && path_length.nil?
+    end
+
     # Returns the number (integer) of levels of folders nested in +folder+.
     def levels_below(folder)
+      return if flat?
+
       path_length - folders.index(folder)
     end
 
@@ -74,9 +84,11 @@ module FolderStash
     # Returns an array with the full path for the terminal folder in the branch
     # created.
     def new_branch_in(folder, levels = nil)
+      return if flat?
+
       raise Errors::BranchError, dir: folder.path if folder == terminal
 
-      raise 'out of storage' if folder.count >= folder_limit
+      raise TreeLimitExceededError, tree: self if folder.count >= folder_limit
 
       levels ||= levels_below folder
       new_branch = new_paths_in folder, levels
@@ -93,6 +105,8 @@ module FolderStash
     #
     # Returns +nil+ if the tree has not been fully initialized with a branch.
     def terminal
+      return root if flat?
+
       return if actual_path_length < path_length
 
       folders.last
@@ -111,14 +125,6 @@ module FolderStash
     def ensure_unique_node(path, name)
       name = SecureRandom.hex(8) while File.exist? File.join(path, name)
       Folder.new File.join(path, name)
-    end
-
-    # FIXME: This should be the default initializer
-    def init_empty(levels = nil)
-      return unless levels
-
-      @path_length = levels
-      new_branch_in(root_dir, levels)
     end
 
     # Returns an array of new Folder instances.

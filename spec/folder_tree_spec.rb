@@ -12,6 +12,40 @@ module FolderStash
     # Delete test folder tree.
     after { FileUtils.rm_r Dir.glob("#{dir}/*") }
 
+    context 'when tree is flat' do
+      let(:flat_tree) { described_class.new [root_folder], nil, nil }
+      let(:root_folder) { Folder.new dir }
+
+      it 'has an actual_path_length of 1' do
+        expect(flat_tree.actual_path_length).to be 1
+      end
+
+      it 'has the root folder as the only folder' do
+        expect(flat_tree.folders).to contain_exactly root_folder
+      end
+
+      it 'has the root folder as the available folder' do
+        expect(flat_tree.available_folder).to be root_folder
+      end
+
+      it 'has a branch_path consisting only of the roort basename' do
+        expect(flat_tree.branch_path).to contain_exactly 'test_dir'
+      end
+
+      it 'returns nil if levels_below root is called' do
+        expect(flat_tree.levels_below(root_folder)).to be_nil
+      end
+
+      it 'will ignore calles to new_branch_in' do
+        expect { flat_tree.new_branch_in(root_folder) }
+          .to not_change(flat_tree, :folders)
+      end
+
+      it 'returns nil when new_branch_in is called' do
+        expect(flat_tree.new_branch_in(root_folder)).to be_nil
+      end
+    end
+
     describe '#available_folder' do
       subject(:available_folder) { folder_tree.available_folder }
 
