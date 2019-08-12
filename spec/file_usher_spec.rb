@@ -4,8 +4,11 @@ module FolderStash
   RSpec.describe FileUsher do
     include_context 'with variables'
 
-    let(:usher) { described_class.new dir, folder_limit: 4 }
-    let(:symlink) { File.join dir, FileUsher::CURRENT_STORE_PATH }
+    let :usher do
+      described_class.new dir, folder_limit: 4, link_location: 'spec'
+    end
+
+    let(:symlink) { File.join 'spec', FileUsher::CURRENT_STORE_PATH }
 
     let :ls do
       -> { Dir.new(dir).children.reject { |fn| fn.start_with? '.' } }
@@ -24,7 +27,7 @@ module FolderStash
           make_test_dir
           td = 'spec/test_dir/folder_1/folder_2/folder_3/folder_4/folder_5'
           FileUtils.ln_s File.expand_path(td),
-                         File.join(dir, FileUsher::CURRENT_STORE_PATH)
+                         File.join('spec', FileUsher::CURRENT_STORE_PATH)
         end
 
         it 'does not change the existing subdirectories' do

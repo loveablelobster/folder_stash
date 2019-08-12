@@ -12,12 +12,6 @@ module FolderStash
     # The working directory where all subdirectories and files are stored.
     attr_reader :directory
 
-    # The number of nested subdirectories.
-    attr_reader :nesting_levels
-
-    # The number of items allowed in any directory in a nested directory path.
-    attr_reader :folder_limit
-
     # An instance of FolderTree.
     attr_reader :tree
 
@@ -33,18 +27,21 @@ module FolderStash
     #   in the path of files that are stored (_default_: +2+).
     # * <tt>folder_limit</tt> - the maximum number of items allowed per
     #   directory (_default_: +10000+).
+    # * <tt>link_location</tt> - the directory where the #current_directory
+    #   symlink is stored. When not specified, the symlink will be in #directory
     #
     # TODO: option to store symlink in other dir (safety thing)
     # TODO: should be able to do nothing if nothing needs to be done
     #   nesting_levels: nil && folder_limit: nil
-    def initialize(dir, nesting_levels: 2, folder_limit: 10_000)
+    def initialize(dir, **opts)
       raise Errors::NoDirectoryError, dir: dir unless File.directory? dir
 
+      @options = { nesting_levels: 2, folder_limit: 10_000 }.update(opts)
       @directory = dir
-      @folder_limit = folder_limit
-      @current_directory = File.join @directory, CURRENT_STORE_PATH
-      @tree = init_existing || init_new(nesting_levels)
-      @nesting_levels = tree.path_length
+      @current_directory = File.join @options.fetch(:link_location, directory),
+                                     CURRENT_STORE_PATH
+
+      @tree = init_existing || init_new(@options.fetch(:nesting_levels))
       link_target
     end
 
@@ -65,6 +62,11 @@ module FolderStash
       current_folder.path
     end
 
+    # The number of items allowed in any directory in a nested directory path.
+    def folder_limit
+      @options.fetch :folder_limit
+    end
+
     # Returns the directory path the #current_directory symlink points to.
     def linked_path
       File.readlink current_directory
@@ -75,6 +77,11 @@ module FolderStash
       path = store_path(file)
       FileUtils.mv File.expand_path(file), store_path(file)
       file_path path, pathtype
+    end
+
+    # The number of nested subdirectories.
+    def nesting_levels
+      tree.path_length
     end
 
     private
