@@ -1,0 +1,36 @@
+= folder_stash
+
+The <tt>folder_stash</tt> gem will store files to a directory with a user
+definable number of subdirectory and maximum number of items per subdirectory.
+
+It uses a symlink to ... 
+
+== Installation
+
+  gem install folder_stash
+
+== Usage
+
+The basic usage is to create a new instance of FileUsher with the directory
+files are to be stored in; the top level storage directory.
+
+  require 'folder_stash'
+  
+  # create a new FileUsher instance with defaults (2 levels of subdirectories,
+  # 10000 items per subdirectory)
+  usher = FolderStash::FileUsher.new('~/storage_dir')
+  
+FileUsher will try to locate the <tt>.current_store_path</tt> symlink, either in
+the top level directory, or, if any other location for the link passed as the
+<tt>link_location</tt> option passed to the 
+initializer[rdoc-ref:FolderStash::FileUsher.new]. 
+
+If the symlink does not exist, it will create a new branch (nested path) with
+the number of nested subdirectories given in the <tt>nesting_levels</tt> option
+passed to the initializer[rdoc-ref:FolderStash::FileUsher.new] and create the
+symlink which will point to the terminal (most deeply nested) subdirectory.
+
+  storage_directory
+  ├── .current_store_path -> ~/storage_dir/a1bd81a073a78025/2d9dfcd7a6c329b4
+  └── a1bd81a073a78025
+      └── 2d9dfcd7a6c329b4

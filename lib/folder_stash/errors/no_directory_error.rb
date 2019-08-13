@@ -2,7 +2,9 @@
 
 module FolderStash
   module Errors
+    # Error that is raised if a directory does not exist.
     class NoDirectoryError < StandardError
+      # Path for the directory that does not exist.
       attr_reader :dir
 
       def initialize(msg = nil, dir: nil)

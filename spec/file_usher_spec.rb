@@ -102,7 +102,7 @@ module FolderStash
             .to change { Dir.children(dir) }
             .from(a_collection_excluding(File.basename(test_file)))
             .to(a_collection_including(File.basename(test_file)))
-            .and not_change { File.exist? test_file }
+            .and(not_change { File.exist? test_file })
         end
 
         it 'moves a file to the base directory' do

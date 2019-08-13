@@ -32,7 +32,7 @@ module FolderStash
     #
     # Setting <tt>nesting_levels</tt> to +nil+ will also set the
     # <tt>folder_limit</tt>. Conversely, setting <tt>folder_limit</tt> to +nil+
-    # also set <tt>nesting_levels</tt> to +nil+
+    # also set <tt>nesting_levels</tt> to +nil+.
     def initialize(dir, **opts)
       raise Errors::NoDirectoryError, dir: dir unless File.directory? dir
 
