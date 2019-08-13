@@ -30,8 +30,9 @@ module FolderStash
     # * <tt>link_location</tt> - the directory where the #current_directory
     #   symlink is stored. When not specified, the symlink will be in #directory
     #
-    # TODO: should be able to do nothing if nothing needs to be done
-    #   nesting_levels: nil && folder_limit: nil
+    # Setting <tt>nesting_levels</tt> to +nil+ will also set the
+    # <tt>folder_limit</tt>. Conversely, setting <tt>folder_limit</tt> to +nil+
+    # also set <tt>nesting_levels</tt> to +nil+
     def initialize(dir, **opts)
       raise Errors::NoDirectoryError, dir: dir unless File.directory? dir
 
@@ -45,10 +46,10 @@ module FolderStash
     end
 
     # Copies +file+ to linked path.
-    def copy(file)
+    def copy(file, pathtype: :tree)
       path = store_path(file)
       File.open(path, 'wb') { |f| f.write(File.new(file).read) }
-      file_path file
+      file_path path, pathtype
     end
 
     # Returns the full path (_String_) to the current directory symlink.
@@ -62,7 +63,11 @@ module FolderStash
     end
 
     # The number of items allowed in any directory in a nested directory path.
+    #
+    # Will be +nil+ if #nesting_levels is +nil+.
     def folder_limit
+      return unless @options.fetch :nesting_levels
+
       @options.fetch :folder_limit
     end
 
@@ -80,6 +85,8 @@ module FolderStash
 
     # The number of nested subdirectories.
     def nesting_levels
+      return unless @options.fetch :folder_limit
+
       tree&.path_length || @options.fetch(:nesting_levels)
     end
 
@@ -142,7 +149,7 @@ module FolderStash
 
     # Returns the next available path (_String_) for a file to be stored under.
     def store_path(file)
-      update_link if current_folder.count >= folder_limit
+      update_link if folder_limit && current_folder.count >= folder_limit
       File.join current_directory, File.basename(file)
     end
 

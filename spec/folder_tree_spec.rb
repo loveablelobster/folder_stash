@@ -96,7 +96,14 @@ module FolderStash
     end
 
     describe '#branch_path' do
-      it 'returns the full path of all subdirectoires in the current branch'
+      subject(:path_array) { folder_tree.branch_path }
+
+      it 'returns an array with the basenames of all subdirectoires in the'\
+         'current branch' do
+        expect(path_array).to contain_exactly 'test_dir', 'folder_1',
+                                              'folder_2', 'folder_3',
+                                              'folder_4', 'folder_5'
+      end
     end
 
     describe '#folders' do
@@ -158,7 +165,12 @@ module FolderStash
           expect(branch.first).to be_directory
         end
 
-        it 'changes the branch_path'
+        it 'changes the branch_path' do
+          expect { branch }.to change(folder_tree, :branch_path)
+            .from(including('folder_3', 'folder_4', 'folder_5'))
+            .to(include(a_random_hex_8_string, a_random_hex_8_string,
+                        a_random_hex_8_string))
+        end
       end
     end
 
@@ -177,5 +189,3 @@ module FolderStash
     end
   end
 end
-
-# folder_21

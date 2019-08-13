@@ -8,6 +8,7 @@ module FolderStash
       described_class.new dir, folder_limit: 4, link_location: 'spec'
     end
 
+    let(:path_rxp) { %r{test_dir/([0-9a-z]{16}/){2}test_file[0-9]*.txt$} }
     let(:symlink) { File.join 'spec', FileUsher::CURRENT_STORE_PATH }
 
     let :ls do
@@ -34,7 +35,7 @@ module FolderStash
         end
       end
 
-      context 'when the current_store_path symlink doesn not exist' do
+      context 'when the current_store_path symlink does not exist' do
         let :nested_dirs do
           lambda do
             return unless File.exist? symlink
@@ -64,11 +65,59 @@ module FolderStash
                                              a_random_hex_8_string
         end
       end
+
+      context 'when no subdirs are used' do
+        subject :flat_usher do
+          described_class.new dir, nesting_levels: nil,
+                                   link_location: 'spec'
+        end
+
+        let(:test_file) { 'spec/test_file.txt' }
+
+        before do
+          contents = "Hi!\n\nI used to live in #{File.expand_path(dir)}."
+          File.write(test_file, contents)
+        end
+
+        after { FileUtils.rm test_file if File.exist? test_file }
+
+        it 'returns the base directory as the current path' do
+          expect(flat_usher.current_path).to eq File.expand_path(dir)
+        end
+
+        it 'has no folder limit' do
+          expect(flat_usher.folder_limit).to be_nil
+        end
+
+        it 'returns the base directory as the linked path' do
+          expect(flat_usher.linked_path).to eq File.expand_path(dir)
+        end
+
+        it 'has no nesting levels' do
+          expect(flat_usher.nesting_levels).to be_nil
+        end
+
+        it 'copies a file to the base directory' do
+          expect { flat_usher.copy(test_file) }
+            .to change { Dir.children(dir) }
+            .from(a_collection_excluding(File.basename(test_file)))
+            .to(a_collection_including(File.basename(test_file)))
+            .and not_change { File.exist? test_file }
+        end
+
+        it 'moves a file to the base directory' do
+          expect { flat_usher.move(test_file) }
+            .to change { Dir.children(dir) }
+            .from(a_collection_excluding(File.basename(test_file)))
+            .to(a_collection_including(File.basename(test_file)))
+            .and change { File.exist? test_file }.from(be_truthy).to be_falsey
+        end
+      end
     end
 
     context 'when storing files' do
       subject :store_files do
-        test_files.each { |f| usher.move f }
+        files_to_store.map { |f| usher.move f }
       end
 
       let :test_files do
@@ -89,7 +138,9 @@ module FolderStash
       context 'when storing within the limit' do
         let(:files_to_store) { test_files[0..63] }
 
-        it 'stores all files in subdirectories'
+        it 'stores all files in subdirectories' do
+          expect(store_files.all? { |f| path_rxp.match? f }).to be_truthy
+        end
       end
 
       context 'when exceeding the total limit' do
@@ -143,33 +194,36 @@ module FolderStash
 
       after { FileUtils.rm test_file if File.exist? test_file }
 
-      describe '#copy(file)' do
-        it 'copies the file'
-      end
-
       describe '#move(file)' do
-        context 'when returning the absolute path' do
-          subject :store_test_file do
-            usher.move test_file, pathtype: :absolute
-          end
+        subject :store_test_file do
+          usher.move test_file, pathtype: pathtype
+        end
 
-          it 'returns the absolute path to the moved file'
+        context 'when returning the absolute path' do
+          let(:pathtype) { :absolute }
+
+          it do
+            expect(store_test_file)
+              .to match_regex(path_rxp).and start_with File.expand_path(dir)
+          end
         end
 
         context 'when returning the relative path' do
-          subject :store_test_file do
-            usher.move test_file, pathtype: :relative
-          end
+          let(:pathtype) { :relative }
 
-          it 'returns the relative path to the moved file'
+          it do
+            expect(store_test_file)
+              .to match_regex(path_rxp).and start_with 'spec/test_dir'
+          end
         end
 
         context 'when returning the tree path to the moved file' do
-          subject :store_test_file do
-            usher.move test_file, pathtype: :tree
-          end
+          let(:pathtype) { :tree }
 
-          it 'returns the path in the tree to the moved file'
+          it do
+            expect(store_test_file)
+              .to match_regex(path_rxp).and start_with 'test_dir'
+          end
         end
       end
     end
