@@ -1,9 +1,18 @@
 = folder_stash
 
-The <tt>folder_stash</tt> gem will store files to a directory with a user
-definable number of subdirectory and maximum number of items per subdirectory.
+The <tt>folder_stash</tt> gem will store files in a directory with a user
+definable number of nested subdirectories in a given path and a maximum number
+of items allowed per subdirectory. A use case is to decrease file system 
+performance penalty when too many files are stored in a single directory of a 
+file server.
 
-It uses a symlink to ... 
+New nested subdirectories will be created on demand as a given subdirectory
+reaches the specified limit of items. All created subdirectories will have
+randomized base names.
+
+<tt>folder_stash</tt> uses a symlink (<tt>.current_store_path</tt>) to the
+currently available directory. By default the symlink will be in the top level
+storage directory, but it can optionally be placed in any directory.
 
 == Installation
 
@@ -11,8 +20,8 @@ It uses a symlink to ...
 
 == Usage
 
-The basic usage is to create a new instance of FileUsher with the directory
-files are to be stored in; the top level storage directory.
+The basic usage is to create a new instance of FileUsher with the directory in
+which files are to be stored in; the top level storage directory.
 
   require 'folder_stash'
   
@@ -22,7 +31,7 @@ files are to be stored in; the top level storage directory.
   
 FileUsher will try to locate the <tt>.current_store_path</tt> symlink, either in
 the top level directory, or, if any other location for the link passed as the
-<tt>link_location</tt> option passed to the 
+<tt>link_location</tt> option passed to the
 initializer[rdoc-ref:FolderStash::FileUsher.new]. 
 
 If the symlink does not exist, it will create a new branch (nested path) with
@@ -34,3 +43,26 @@ symlink which will point to the terminal (most deeply nested) subdirectory.
   ├── .current_store_path -> ~/storage_dir/a1bd81a073a78025/2d9dfcd7a6c329b4
   └── a1bd81a073a78025
       └── 2d9dfcd7a6c329b4
+
+If the symlink exists, FileUsher will use the existing subdirectory hierarchy.
+
+Files can be copied or moved to the directory the symlink currently points to
+using the {#copy}[rdoc-ref:FolderStash::FileUsher#copy] and
+{#move}[rdoc-ref:FolderStash::FileUsher#move] methods respectively, which both
+will return the path the file was stored to.
+
+  usher.copy('~/image1.jpg')
+  # => "storage_dir/a1bd81a073a78025/2d9dfcd7a6c329b4/image1.jpg"
+  
+  usher.move('~/image2.jpg')
+  # => "storage_dir/a1bd81a073a78025/2d9dfcd7a6c329b4/image2.jpg"
+
+The path returned will by default start with the top level storage directory. It
+is possible to return the relative path or absolute path by passing the values
++:relative+ or +:absolute+ as the +pathtype+ option:
+
+  usher.copy('~/image3.jpg', :pathtype => :relative)
+  # => "path/to/storage_dir/a1bd81a073a78025/2d9dfcd7a6c329b4/image3.jpg"
+  
+  usher.copy('~/image4.jpg', :pathtype => :absolute)
+  # => "/path/to/storage_dir/a1bd81a073a78025/2d9dfcd7a6c329b4/image4.jpg"
