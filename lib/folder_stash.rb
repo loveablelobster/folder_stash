@@ -8,6 +8,6 @@ require_relative 'folder_stash/file_usher'
 require_relative 'folder_stash/folder'
 require_relative 'folder_stash/folder_tree'
 
-#
+# Module that contains the FileUsher, FolderTree, and FolderTree classes.
 module FolderStash
 end
