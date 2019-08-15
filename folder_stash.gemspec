@@ -11,10 +11,9 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
   s.email = 'loveablelobster@fastmail.fm'
   s.description = <<~DESCRIPTION
-    The <tt>folder_stash</tt> gem will store files in a directory with a user
-    definable number of nested subdirectories in a given path and a maximum
-    number of items allowed per subdirectory.
-
+    The folder_stash gem will store files in a directory with a user definable
+    number of nested subdirectories in a given path and a maximum number of
+    items allowed per subdirectory.
     New nested subdirectories will be created on demand as a given subdirectory
     reaches the specified limit of items. All created subdirectories will have
     randomized base names.
