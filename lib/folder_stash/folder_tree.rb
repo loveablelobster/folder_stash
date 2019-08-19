@@ -11,7 +11,7 @@ module FolderStash
     attr_reader :folder_limit
 
     # The number of items (directories) in a nested directory path, from the
-    # #root to the #terminal.
+    # #root (base directory) to the #terminal.
     attr_reader :path_length
 
     attr_reader :tree_limit
@@ -26,9 +26,9 @@ module FolderStash
     #   tree's directory path.
     def initialize(folders, levels, limit)
       @folders = folders
-      @path_length = levels
+      @path_length = levels ? levels + 1 : nil
       @folder_limit = limit
-      @tree_limit = folder_limit ? folder_limit**(path_length + 1) : nil
+      @tree_limit = folder_limit ? folder_limit**(path_length) : nil
     end
 
     def self.empty(root, levels:, limit:)
@@ -71,11 +71,16 @@ module FolderStash
       actual_path_length == 1 && path_length.nil?
     end
 
-    # Returns the number (integer) of levels of folders nested in +folder+.
+    # Returns the number of levels of folders nested in +folder+.
     def levels_below(folder)
       return if flat?
 
-      path_length - folders.index(folder)
+      subdirectories - folders.index(folder)
+    end
+
+    # The nesting depth (Integer) of subdirectories in the base directory.
+    def subdirectories
+      path_length - 1
     end
 
     # Creates a new branch of folders in +folder+ and updates #folders to the

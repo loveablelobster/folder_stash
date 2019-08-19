@@ -15,7 +15,7 @@ module FolderStash
       attr_reader :tree_limit
 
       def initialize(msg = nil, tree: nil)
-        @subdirs = tree.path_length
+        @subdirs = tree.subdirectories
         @subdir_limit = tree.folder_limit
         @tree_limit = tree.tree_limit
         msg ||= 'The storage tree has reached the limit of allowed items:'\

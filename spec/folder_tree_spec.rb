@@ -177,7 +177,7 @@ module FolderStash
     describe '#path_length' do
       subject { folder_tree.path_length }
 
-      it { is_expected.to be 5 }
+      it { is_expected.to be 6 }
     end
 
     describe '#root' do
