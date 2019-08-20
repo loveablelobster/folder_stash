@@ -46,8 +46,12 @@ module FolderStash
     end
 
     # Copies +file+ to linked path.
-    def copy(file, pathtype: :tree)
-      path = store_path(file)
+    #
+    # The optional <tt>new_basename</tt> argument is passed when the file is to
+    # be renamed.
+    def copy(file, new_basename = nil, pathtype: :tree)
+      filename = new_basename || File.basename(file)
+      path = store_path(filename)
       File.open(path, 'wb') { |f| f.write(File.new(file).read) }
       file_path path, pathtype
     end
@@ -77,9 +81,13 @@ module FolderStash
     end
 
     # Moves +file+ to the #linked_path.
-    def move(file, pathtype: :tree)
-      path = store_path(file)
-      FileUtils.mv File.expand_path(file), store_path(file)
+    #
+    # The optional <tt>new_basename</tt> argument is passed when the file is to
+    # be renamed.
+    def move(file, new_basename = nil, pathtype: :tree)
+      filename = new_basename || File.basename(file)
+      path = store_path(filename)
+      FileUtils.mv File.expand_path(file), path
       file_path path, pathtype
     end
 
@@ -148,9 +156,10 @@ module FolderStash
     end
 
     # Returns the next available path (_String_) for a file to be stored under.
-    def store_path(file)
+    # +filename+ is the basename for the file to be stored.
+    def store_path(filename)
       update_link if folder_limit && current_folder.count >= folder_limit
-      File.join current_directory, File.basename(file)
+      File.join current_directory, filename
     end
 
     # Creates new subdirectories points the #current_directory symlink to the

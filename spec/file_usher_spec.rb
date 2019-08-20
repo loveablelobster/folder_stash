@@ -194,9 +194,23 @@ module FolderStash
 
       after { FileUtils.rm test_file if File.exist? test_file }
 
+      describe '#copy(file)' do
+        context 'when renaming' do
+          subject(:store_test_file) { usher.copy test_file, 'new_name.txt' }
+
+          it { is_expected.to end_with 'new_name.txt' }
+        end
+      end
+
       describe '#move(file)' do
         subject :store_test_file do
           usher.move test_file, pathtype: pathtype
+        end
+
+        context 'when renaming' do
+          subject(:store_test_file) { usher.move test_file, 'new_name.txt' }
+
+          it { is_expected.to end_with 'new_name.txt' }
         end
 
         context 'when returning the absolute path' do
