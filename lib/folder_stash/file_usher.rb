@@ -119,8 +119,8 @@ module FolderStash
       tree.terminal
     end
 
-    # Returns the path for +path+ as +:absolute+, +:relative+, or only the
-    # nested subdirectories in the +:tree+.
+    # Returns the path for +path+ as +:absolute+, +:relative+, only the nested
+    # subdirectories in the +:tree+, or only the +:branch+.
     def file_path(path, pathtype)
       treepath = tree.branch_path.append(File.basename(path))
       case pathtype
@@ -129,6 +129,8 @@ module FolderStash
       when :relative
         treepath[0] = directory
         treepath.join('/')
+      when :branch
+        treepath[1..-1].join('/')
       when :tree
         treepath.join('/')
       end

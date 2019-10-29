@@ -8,7 +8,7 @@ module FolderStash
       described_class.new dir, folder_limit: 4, link_location: 'spec'
     end
 
-    let(:path_rxp) { %r{test_dir/([0-9a-z]{16}/){2}test_file[0-9]*.txt$} }
+    let(:path_rxp) { %r{([0-9a-z]{16}/){2}test_file[0-9]*.txt$} }
     let(:symlink) { File.join 'spec', FileUsher::CURRENT_STORE_PATH }
 
     let :ls do
@@ -213,7 +213,7 @@ module FolderStash
           it { is_expected.to end_with 'new_name.txt' }
         end
 
-        context 'when returning the absolute path' do
+        context 'when returning the absolute path to the moved file' do
           let(:pathtype) { :absolute }
 
           it do
@@ -222,7 +222,7 @@ module FolderStash
           end
         end
 
-        context 'when returning the relative path' do
+        context 'when returning the relative path to the moved file' do
           let(:pathtype) { :relative }
 
           it do
@@ -237,6 +237,15 @@ module FolderStash
           it do
             expect(store_test_file)
               .to match_regex(path_rxp).and start_with 'test_dir'
+          end
+        end
+
+        context 'when returning the branch path to the moved file' do
+          let(:pathtype) { :branch }
+
+          it do
+            expect(store_test_file)
+              .to match_regex(path_rxp)#.and start_with a_random_hex_8_string
           end
         end
       end
