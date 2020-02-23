@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'folder_stash'
-  s.version = '0.0.4'
+  s.version = '0.0.5'
   s.summary = 'Keeps the number of files per directory within a limit by'\
               ' autogenerating subdirectories.'
   s.author = 'Martin Stein'
@@ -18,4 +18,5 @@ Gem::Specification.new do |s|
     reaches the specified limit of items. All created subdirectories will have
     randomized base names.
   DESCRIPTION
+  s.required_ruby_version = '>= 2.7'
 end

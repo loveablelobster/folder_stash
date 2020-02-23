@@ -104,7 +104,7 @@ module FolderStash
     # if none is available.
     def available_folder
       folder = tree.available_folder
-      raise Errors::TreeLimitExceededError, tree: tree unless folder
+      raise Errors::TreeLimitExceededError.new(tree: tree) unless folder
 
       folder
     end

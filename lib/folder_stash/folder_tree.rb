@@ -91,9 +91,9 @@ module FolderStash
     def new_branch_in(folder, levels = nil)
       return if flat?
 
-      raise Errors::BranchError, dir: folder.path if folder == terminal
+      raise Errors::BranchError.new(dir: folder.path) if folder == terminal
 
-      raise TreeLimitExceededError, tree: self if folder.count >= folder_limit
+      raise TreeLimitExceededError.new(tree: self) if folder.count >= folder_limit
 
       levels ||= levels_below folder
       new_branch = new_paths_in folder, levels

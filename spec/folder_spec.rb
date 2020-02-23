@@ -26,7 +26,7 @@ module FolderStash
     end
 
     describe 'entries(include_hidden: false)' do
-      subject(:list) { folder.entries opts }
+      subject(:list) { folder.entries **opts }
 
       context 'when excluding hidden files' do
         let(:opts) { { include_hidden: false } }
